@@ -11,50 +11,64 @@ import fr.bananasmoothii.wfc.util.*
 import fr.bananasmoothii.wfc.wavefunction.WaveFunction.PropagationTask.Companion.addPropagationTasksInBoundsToList
 import kotlin.random.Random
 
-class WaveFunction<C : Rotatable<D>, D : Dimension<D>> private constructor(
+open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
     val tileSet: TileSet<C, D>,
-    protected var map: MutableMap<Coords<D>, LongArray>,
-    private val random: Random = Random.Default,
-) : Map<Coords<D>, Tile<C, D>>, Versionable {
+    protected val random: Random = Random.Default,
+) : Iterable<Map.Entry<Coords<D>, List<Tile<C, D>>>>, Versionable {
 
     init {
         require(!tileSet.canCreateNewPieces) { "You have to finish creating the TileSet before using it in generation" }
     }
 
-    private var lastCoordsWherePicked: Coords<D>? = null
-    private var lastTileIdPicked: Int? = null
+    protected var map = mutableMapOf<Coords<D>, LongArray>()
 
-    private val allTiles = tileSet.tiles
-    private val maxId = tileSet.maxId
-    private val arraySize = tileSet.arraySize
+    protected var lastCoordsWherePicked: Coords<D>? = null
+    protected var lastTileIdPicked: Int? = null
+
+    protected val maxId = tileSet.maxId
+    protected val maxEntropyArray = tileSet.maxEntropyArray
+    protected val arraySize = tileSet.arraySize
 
     //private val dispatcher = newSingleThreadContext("Propagation thread")
 
-    constructor(tileSet: TileSet<C, D>) : this(
-        tileSet,
-        mutableMapOf<Coords<D>, LongArray>(),
-    )
-
     fun collapse(bounds: Bounds<D>) {
         for (coords in bounds) {
-            if (map[coords])
+            val tilesAtCoordsArray = map[coords]
+            if (tilesAtCoordsArray?.hasSingle1Bit() == true) continue
             commit()
-            val chosenPieceId = collapse(coords)
+            // there are multiple possibilities, so we pick one
+            lastCoordsWherePicked = coords
+            val tileId = chooseTile(tilesAtCoordsArray)
+            lastTileIdPicked = tileId
+            collapse(coords, tileId)
+            try {
+                propagateFrom(coords, bounds)
+            } catch (e: PropagationException) {
+                rollback()
+                // remove that bad choice
+                if (tilesAtCoordsArray == null) map[coords] = maxEntropyArray.copyOf().also { it.set0BitAt(tileId) }
+                else tilesAtCoordsArray.set0BitAt(tileId)
+            }
         }
     }
 
-    fun collapse(coords: Coords<D>): Int {
+    fun chooseTile(options: LongArray?): Int {
+        if (options == null) return random.nextInt(maxId + 1)
+        return tileSet.pickTile(options, random)
+    }
+
+    fun collapse(coords: Coords<D>, chosenTile: Int = chooseTile(map[coords])) {
         val tilesAtCoordsArray = map[coords]
         if (tilesAtCoordsArray != null)
-            tilesAtCoordsArray.setAll0AndSet1BitAt(tileSet.pickTile(tilesAtCoordsArray, random))
+            tilesAtCoordsArray.setAll0AndSet1BitAt(chosenTile)
         else
-            map[coords] = LongArray(arraySize).also { it.set1BitAt(random.nextInt(maxId + 1)) }
+            map[coords] = LongArray(arraySize).also { it.set1BitAt(chosenTile) }
     }
 
     /**
      * @throws PropagationException if an empty state is found
      */
-    fun propagateFrom(latestCollapse: Coords<D>, latestCollapseTile: Tile<C, D>, bounds: Bounds<D>) {
+    fun propagateFrom(latestCollapse: Coords<D>, bounds: Bounds<D>) {
         val needPropagationCoords: MutableList<PropagationTask<C, D>> = mutableListOf()
         latestCollapse.addPropagationTasksInBoundsToList(needPropagationCoords, bounds)
 
@@ -62,14 +76,14 @@ class WaveFunction<C : Rotatable<D>, D : Dimension<D>> private constructor(
             val needPropagationCoordsCopy = needPropagationCoords.toMutableList()
             needPropagationCoords.clear()
 
-            for (task in needPropagationCoordsCopy) {
+            for ((center, direction) in needPropagationCoordsCopy) {
                 // TODO: fork (multithreading) (is it good to do it here ?)
 
-                val taskPointsTo = task.pointsTo()
-                val tilesAtCoordsArray = map[taskPointsTo] ?: continue
+                val taskPointsTo = center.move(direction)
+                val tilesAtCoordsArray = map[taskPointsTo] ?: maxEntropyArray.copyOf()
                 val currentLocationMaskForDirection = LongArray(arraySize)
-                for (currentLocationTile in tileSet.getTileList(map[task.center]!!)) {
-                    currentLocationMaskForDirection bitOrEquals currentLocationTile.getNeighborMask(task.direction)
+                tileSet.getTileList(map[center]!!).forEach {
+                    it.addAllowedNeighborsToArray(currentLocationMaskForDirection, direction)
                 }
 
                 if (tilesAtCoordsArray bitAndEquals currentLocationMaskForDirection) { // removing impossible neighbors
@@ -93,7 +107,7 @@ class WaveFunction<C : Rotatable<D>, D : Dimension<D>> private constructor(
                 list: MutableList<PropagationTask<C, D>>,
                 bounds: Bounds<D>
             ) {
-                dimension.directions.forEach { direction ->
+                dimension.directionsAt(this).forEach { direction ->
                     if (this.move(direction) in bounds)
                         list += PropagationTask(this, direction)
                 }
@@ -106,14 +120,13 @@ class WaveFunction<C : Rotatable<D>, D : Dimension<D>> private constructor(
     }
 
 
-
-    private inner class State(
+    protected open inner class State(
         val map: MutableMap<Coords<D>, LongArray>,
         val lastCoordsWherePicked: Coords<D>?,
         val lastTileIdPicked: Int?
     )
 
-    private val states = mutableListOf<State>()
+    protected val states = mutableListOf<State>()
 
     override fun commit() {
         states += State(map.toMutableMap(), lastCoordsWherePicked, lastTileIdPicked)
@@ -128,4 +141,21 @@ class WaveFunction<C : Rotatable<D>, D : Dimension<D>> private constructor(
         lastTileIdPicked = state.lastTileIdPicked
     }
 
+    override fun iterator(): Iterator<Map.Entry<Coords<D>, List<Tile<C, D>>>> =
+        map.asSequence().map { (coords, tilesAtCoordsArray) ->
+            object : Map.Entry<Coords<D>, List<Tile<C, D>>> {
+                override val key: Coords<D> = coords
+                override val value: List<Tile<C, D>> = tileSet.getTileList(tilesAtCoordsArray)
+            }
+        }.iterator()
+
+    fun getTileList(coords: Coords<D>): List<Tile<C, D>>? = map[coords]?.let { tileSet.getTileList(it) }
+
+    fun setTileList(coords: Coords<D>, tiles: List<Tile<C, D>>) {
+        val array = LongArray(arraySize)
+        for (tile in tiles) {
+            array.set1BitAt(tile.id)
+        }
+        map[coords] = array
+    }
 }

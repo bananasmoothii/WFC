@@ -19,11 +19,15 @@ interface Tile<C: Rotatable<D>, D: Dimension<D>>: Dimensioned<D> {
      */
     fun accepts(direction: Direction<D>, neighborId: Int): Boolean
 
-    /**
+    /*
      * Returns a mask of the accepted neighbors in the given direction.
      * Warning: for performance reasons, the returned array is the internal array of the tile, so don't modify it.
-     */
+     *
     fun getNeighborMask(direction: Direction<D>): LongArray
+
+     */
+
+    fun addAllowedNeighborsToArray(bitMask: LongArray, direction: Direction<D>)
 
     /*
      * Applies the neighbor mask to the given array. Each bit in [currentOptions] will be set to 0 if the corresponding

@@ -23,6 +23,8 @@ abstract class TileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned<D> {
 
     abstract val tiles: List<Tile<C, D>>
 
+    abstract fun fromId(id: Int): Tile<C, D>
+
     abstract fun createOrGetTile(content: C): Tile<C, D>
 
     private var actionsAfterFinishCreation: MutableList<() -> Unit>? = mutableListOf()

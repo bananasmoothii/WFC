@@ -12,5 +12,5 @@ interface Coords<D : Dimension<D>> : Dimensioned<D> {
     /**
      * @return the coordinates of the neighbours (adjacent tiles) of this coordinate
      */
-    fun getNeighbours(): List<Coords<D>> = dimension.directions.map { move(it) }
+    fun getNeighbours(): List<Coords<D>> = dimension.directionsAt(this).map { move(it) }
 }

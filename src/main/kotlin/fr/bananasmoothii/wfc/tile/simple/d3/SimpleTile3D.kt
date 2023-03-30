@@ -46,11 +46,20 @@ open class SimpleTile3D<C : Rotatable3D> internal constructor(
     override fun accepts(direction: Direction<Dimension3D>, neighborId: Int): Boolean =
         getArray(direction).getBitAt(neighborId)
 
-    /**
+    /*
      * Warning: this exposes the internal array. Don't modify it.
-     */
+     *
     override fun getNeighborMask(direction: Direction<Dimension3D>): LongArray {
         return getArray(direction as Direction3D)
+    }
+
+     */
+
+    override fun addAllowedNeighborsToArray(bitMask: LongArray, direction: Direction<Dimension3D>) {
+        val array = getArray(direction as Direction3D)
+        for (i in bitMask.indices) {
+            bitMask[i] = bitMask[i] or array[i]
+        }
     }
 
     fun applyNeighborMask(direction: Direction<Dimension3D>, currentOptions: LongArray): Boolean {
