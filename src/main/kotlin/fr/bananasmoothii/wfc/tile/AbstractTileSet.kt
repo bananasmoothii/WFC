@@ -10,7 +10,7 @@ import fr.bananasmoothii.wfc.util.getBitAt
  * A set of pieces, with a unique id for each piece.
  * @param C the type of the content of the pieces
  */
-abstract class TileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned<D> {
+abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned<D> {
 
     var canCreateNewPieces = true
         private set
@@ -26,6 +26,8 @@ abstract class TileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned<D> {
     abstract fun fromId(id: Int): Tile<C, D>
 
     abstract fun createOrGetTile(content: C): Tile<C, D>
+
+    abstract fun generateRotations()
 
     private var actionsAfterFinishCreation: MutableList<() -> Unit>? = mutableListOf()
 

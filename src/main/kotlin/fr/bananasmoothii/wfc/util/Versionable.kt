@@ -1,4 +1,4 @@
-package fr.bananasmoothii.wfc.wavefunction
+package fr.bananasmoothii.wfc.util
 
 /**
  * A versionable object is an object that can be committed or rolled back.

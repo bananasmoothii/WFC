@@ -4,15 +4,15 @@ import fr.bananasmoothii.wfc.space.Bounds
 import fr.bananasmoothii.wfc.space.Coords
 import fr.bananasmoothii.wfc.space.Dimension
 import fr.bananasmoothii.wfc.space.Direction
+import fr.bananasmoothii.wfc.tile.AbstractTileSet
 import fr.bananasmoothii.wfc.tile.Rotatable
 import fr.bananasmoothii.wfc.tile.Tile
-import fr.bananasmoothii.wfc.tile.TileSet
 import fr.bananasmoothii.wfc.util.*
 import fr.bananasmoothii.wfc.wavefunction.WaveFunction.PropagationTask.Companion.addPropagationTasksInBoundsToList
 import kotlin.random.Random
 
 open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
-    val tileSet: TileSet<C, D>,
+    val tileSet: AbstractTileSet<C, D>,
     protected val random: Random = Random.Default,
 ) : Iterable<Map.Entry<Coords<D>, List<Tile<C, D>>>>, Versionable {
 

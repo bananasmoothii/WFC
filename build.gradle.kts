@@ -12,8 +12,12 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
 
+    // used for getting an instance of a reified Dimension type
+    implementation(kotlin("reflect"))
+
     // coroutines
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.6.4")
+
 }
 
 tasks.test {
