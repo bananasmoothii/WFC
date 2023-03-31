@@ -1,0 +1,46 @@
+package fr.bananasmoothii.wfc.space.d2
+
+import fr.bananasmoothii.wfc.space.Bounds
+import fr.bananasmoothii.wfc.space.d2.Bounds2D.Companion.rangeTo
+
+/**
+ * A 3D volume between two inclusive coordinates.
+ * Instantiate with [Coords2D.rangeTo]: `Coords(x1, y1, z1) .. Coords(x2, y2, z2)`
+ */
+class Bounds2D private constructor(override val start: Coords2D, override val end: Coords2D) : Bounds<Dimension2D>, D2 {
+
+    operator fun contains(coords: Coords2D): Boolean =
+        coords.x in start.x..end.x && coords.y in start.y..end.y
+
+
+    override operator fun iterator(): Iterator<Coords2D> = object : Iterator<Coords2D> {
+        var currentX = start.x
+        var currentY = start.y
+
+        override fun hasNext(): Boolean = currentX <= end.x && currentY <= end.y
+
+        override fun next(): Coords2D {
+            val result = Coords2D(currentX, currentY)
+            currentX++
+            if (currentX > end.x) {
+                currentX = start.x
+                currentY++
+                if (currentY > end.y) throw NoSuchElementException()
+            }
+            return result
+        }
+    }
+
+    companion object {
+        operator fun Coords2D.rangeTo(other: Coords2D) = Bounds2D(
+            Coords2D(
+                minOf(this.x, other.x),
+                minOf(this.y, other.y),
+            ),
+            Coords2D(
+                maxOf(this.x, other.x),
+                maxOf(this.y, other.y),
+            )
+        )
+    }
+}
