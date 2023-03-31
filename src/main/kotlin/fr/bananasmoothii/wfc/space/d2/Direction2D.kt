@@ -35,6 +35,6 @@ sealed class Direction2D: Direction<Dimension2D>, D2 {
     }
 
     companion object {
-        val values: Array<Direction2D> = arrayOf(UP, DOWN, LEFT, RIGHT)
+        val values: Array<Direction2D> by lazy { arrayOf(UP, DOWN, LEFT, RIGHT) }
     }
 }

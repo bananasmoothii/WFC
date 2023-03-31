@@ -46,6 +46,6 @@ sealed class Direction3D: Direction<Dimension3D>, D3 {
     }
 
     companion object {
-        val values: Array<Direction3D> = arrayOf(NORTH, SOUTH, EAST, WEST, UP, DOWN)
+        val values: Array<Direction3D> by lazy { arrayOf(NORTH, SOUTH, EAST, WEST, UP, DOWN) }
     }
 }

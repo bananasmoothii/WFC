@@ -4,7 +4,7 @@ import fr.bananasmoothii.wfc.space.Dimension
 import fr.bananasmoothii.wfc.space.Dimensioned
 import fr.bananasmoothii.wfc.space.Direction
 
-interface Tile<C: Rotatable<C, D>, D: Dimension<D>>: Dimensioned<D> {
+interface Tile<C: Rotatable<D>, D: Dimension<D>>: Dimensioned<D> {
     val id: Int
     val content: C
     val belongingSet: AbstractTileSet<C, D>?

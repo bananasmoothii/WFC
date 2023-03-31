@@ -13,7 +13,7 @@ class TileSet<C : Rotatable<D>, D : Dimension<D>>(override val dimension: D) : A
     private val _tiles: MutableList<Tile> = mutableListOf()
 
     override val tiles: List<Tile>
-        get() = _tiles
+        get() = _tiles.toList()
 
     override fun fromId(id: Int): Tile = _tiles[id]
 
@@ -24,8 +24,8 @@ class TileSet<C : Rotatable<D>, D : Dimension<D>>(override val dimension: D) : A
     }
 
     override fun generateRotations() {
-        if (canCreateNewPieces) throw IllegalStateException("Can't generate rotations before finishPieceCreation() has been called")
-        for (tile in _tiles) {
+        if (!canCreateNewPieces) throw IllegalStateException("Can't create new pieces after finishPieceCreation() has been called")
+        for (tile in _tiles.toList()) {
             for (rotation in tile.content.generateRotations()) {
                 val tileWithSameContent = _tiles.find { it.content == rotation }
                 if (tileWithSameContent == null) {
