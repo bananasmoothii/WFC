@@ -7,25 +7,29 @@ import fr.bananasmoothii.wfc.space.d2.Bounds2D.Companion.rangeTo
  * A 3D volume between two inclusive coordinates.
  * Instantiate with [Coords2D.rangeTo]: `Coords(x1, y1, z1) .. Coords(x2, y2, z2)`
  */
-class Bounds2D private constructor(override val start: Coords2D, override val end: Coords2D) : Bounds<Dimension2D>, D2 {
+class Bounds2D private constructor(override val min: Coords2D, override val max: Coords2D) : Bounds<Dimension2D>, D2 {
+
+    val width = max.x - min.x + 1
+    val height = max.y - min.y + 1
 
     operator fun contains(coords: Coords2D): Boolean =
-        coords.x in start.x..end.x && coords.y in start.y..end.y
+        coords.x in min.x..max.x && coords.y in min.y..max.y
 
 
     override operator fun iterator(): Iterator<Coords2D> = object : Iterator<Coords2D> {
-        var currentX = start.x
-        var currentY = start.y
+        var currentX = min.x
+        var currentY = min.y
 
-        override fun hasNext(): Boolean = currentX <= end.x && currentY <= end.y
+
+        override fun hasNext(): Boolean = currentX <= max.x && currentY <= max.y
 
         override fun next(): Coords2D {
+            if (currentY > max.y) throw NoSuchElementException()
             val result = Coords2D(currentX, currentY)
             currentX++
-            if (currentX > end.x) {
-                currentX = start.x
+            if (currentX > max.x) {
+                currentX = min.x
                 currentY++
-                if (currentY > end.y) throw NoSuchElementException()
             }
             return result
         }

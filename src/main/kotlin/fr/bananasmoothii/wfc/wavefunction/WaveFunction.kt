@@ -8,12 +8,12 @@ import fr.bananasmoothii.wfc.tile.AbstractTileSet
 import fr.bananasmoothii.wfc.tile.Rotatable
 import fr.bananasmoothii.wfc.tile.Tile
 import fr.bananasmoothii.wfc.util.*
-import fr.bananasmoothii.wfc.wavefunction.WaveFunction.PropagationTask.Companion.addPropagationTasksInBoundsToList
 import kotlin.random.Random
 
 open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
     val tileSet: AbstractTileSet<C, D>,
     protected val random: Random = Random.Default,
+    var onCollapse: ((Coords<D>, Tile<C, D>) -> Unit)? = null,
 ) : Iterable<Map.Entry<Coords<D>, List<Tile<C, D>>>>, Versionable {
 
     init {
@@ -53,7 +53,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
     }
 
     fun chooseTile(options: LongArray?): Int {
-        if (options == null) return random.nextInt(maxId + 1)
+        if (options == null) return random.nextInt(maxId)
         return tileSet.pickTile(options, random)
     }
 
@@ -63,6 +63,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
             tilesAtCoordsArray.setAll0AndSet1BitAt(chosenTile)
         else
             map[coords] = LongArray(arraySize).also { it.set1BitAt(chosenTile) }
+        onCollapse?.invoke(coords, tileSet.fromId(chosenTile))
     }
 
     /**
@@ -70,7 +71,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
      */
     fun propagateFrom(latestCollapse: Coords<D>, bounds: Bounds<D>) {
         val needPropagationCoords: MutableList<PropagationTask<C, D>> = mutableListOf()
-        latestCollapse.addPropagationTasksInBoundsToList(needPropagationCoords, bounds)
+        addPropagationTasksInBoundsToList(latestCollapse, needPropagationCoords, bounds)
 
         while (needPropagationCoords.isNotEmpty()) {
             val needPropagationCoordsCopy = needPropagationCoords.toMutableList()
@@ -82,7 +83,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
                 val taskPointsTo = center.move(direction)
                 val tilesAtCoordsArray = map[taskPointsTo] ?: maxEntropyArray.copyOf()
                 val currentLocationMaskForDirection = LongArray(arraySize)
-                tileSet.getTileList(map[center]!!).forEach {
+                tileSet.getTileList(map[center] ?: maxEntropyArray).forEach {
                     it.addAllowedNeighborsToArray(currentLocationMaskForDirection, direction)
                 }
 
@@ -90,7 +91,12 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
                     // tilesAtCoordsArray has changed
                     if (tilesAtCoordsArray.hasOnly0Bits()) throw PropagationException(taskPointsTo)
 
-                    taskPointsTo.addPropagationTasksInBoundsToList(needPropagationCoords, bounds)
+                    if (onCollapse != null && tilesAtCoordsArray.hasSingle1Bit()) {
+                        val tile = tileSet.getTileList(tilesAtCoordsArray).first()
+                        onCollapse?.let { it(taskPointsTo, tile) }
+                    }
+
+                    addPropagationTasksInBoundsToList(taskPointsTo, needPropagationCoords, bounds)
                 }
             }
         }
@@ -101,19 +107,20 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
         val direction: Direction<D>
     ) {
         fun pointsTo() = center.move(direction)
+    }
 
-        companion object {
-            fun <C : Rotatable<D>, D : Dimension<D>> Coords<D>.addPropagationTasksInBoundsToList(
-                list: MutableList<PropagationTask<C, D>>,
-                bounds: Bounds<D>
-            ) {
-                dimension.directionsAt(this).forEach { direction ->
-                    if (this.move(direction) in bounds)
-                        list += PropagationTask(this, direction)
-                }
-            }
+    private fun addPropagationTasksInBoundsToList(
+        coords: Coords<D>,
+        list: MutableList<PropagationTask<C, D>>,
+        bounds: Bounds<D>
+    ) {
+        for (direction in coords.dimension.directionsAt(coords)) {
+            val newCoords: Coords<D> = coords.move(direction)
+            if ((newCoords in bounds) && (map[newCoords]?.hasSingle1Bit() != true))
+                list += PropagationTask(coords, direction)
         }
     }
+
 
     class PropagationException(message: String) : Exception(message) {
         constructor(coords: Coords<*>) : this("Found an empty node at $coords")

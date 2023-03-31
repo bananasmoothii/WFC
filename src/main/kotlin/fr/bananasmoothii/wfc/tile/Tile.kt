@@ -15,6 +15,20 @@ interface Tile<C: Rotatable<D>, D: Dimension<D>>: Dimensioned<D> {
     fun accept(direction: Direction<D>, neighborId: Int)
 
     /**
+     * Adds an accepted neighbor to this piece.
+     */
+    fun accept(direction: Direction<D>, neighbor: Tile<C, D>) = accept(direction, neighbor.id)
+
+    /**
+     * Adds accepted neighbors to this piece.
+     */
+    fun accept(direction: Direction<D>, vararg neighbor: Tile<C, D>) {
+        neighbor.forEach {
+            accept(direction, it.id)
+        }
+    }
+
+    /**
      * Returns true if this piece accepts the neighbor in the given direction.
      */
     fun accepts(direction: Direction<D>, neighborId: Int): Boolean

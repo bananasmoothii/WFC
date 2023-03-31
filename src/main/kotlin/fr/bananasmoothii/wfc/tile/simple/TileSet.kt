@@ -20,7 +20,7 @@ class TileSet<C : Rotatable<D>, D : Dimension<D>>(override val dimension: D) : A
     override fun createOrGetTile(content: C): Tile {
         if (!canCreateNewPieces) throw IllegalStateException("Can't create new pieces after finishPieceCreation() has been called")
         val tileWithSameContent = _tiles.find { it.content == content }
-        return tileWithSameContent ?: Tile(++maxId, content).also { _tiles.add(it) }
+        return tileWithSameContent ?: Tile(maxId++, content).also { _tiles.add(it) }
     }
 
     override fun generateRotations() {
@@ -29,7 +29,7 @@ class TileSet<C : Rotatable<D>, D : Dimension<D>>(override val dimension: D) : A
             for (rotation in tile.content.generateRotations()) {
                 val tileWithSameContent = _tiles.find { it.content == rotation }
                 if (tileWithSameContent == null) {
-                    _tiles += Tile(++maxId, rotation as C)
+                    _tiles += Tile(maxId++, rotation as C)
                 }
             }
         }

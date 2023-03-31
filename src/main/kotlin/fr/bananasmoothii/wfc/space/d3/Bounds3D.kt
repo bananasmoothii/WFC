@@ -7,29 +7,29 @@ import fr.bananasmoothii.wfc.space.d3.Bounds3D.Companion.rangeTo
  * A 3D volume between two inclusive coordinates.
  * Instantiate with [Coords3D.rangeTo]: `Coords(x1, y1, z1) .. Coords(x2, y2, z2)`
  */
-class Bounds3D private constructor(override val start: Coords3D, override val end: Coords3D) : Bounds<Dimension3D>, D3 {
+class Bounds3D private constructor(override val min: Coords3D, override val max: Coords3D) : Bounds<Dimension3D>, D3 {
 
     operator fun contains(coords: Coords3D): Boolean =
-        coords.x in start.x..end.x && coords.y in start.y..end.y && coords.z in start.z..end.z
+        coords.x in min.x..max.x && coords.y in min.y..max.y && coords.z in min.z..max.z
 
 
     override operator fun iterator(): Iterator<Coords3D> = object : Iterator<Coords3D> {
-        var currentX = start.x
-        var currentY = start.y
-        var currentZ = start.z
+        var currentX = min.x
+        var currentY = min.y
+        var currentZ = min.z
 
-        override fun hasNext(): Boolean = currentX <= end.x && currentY <= end.y && currentZ <= end.z
+        override fun hasNext(): Boolean = currentX <= max.x && currentY <= max.y && currentZ <= max.z
 
         override fun next(): Coords3D {
+            if (currentZ > max.z) throw NoSuchElementException()
             val result = Coords3D(currentX, currentY, currentZ)
             currentX++
-            if (currentX > end.x) {
-                currentX = start.x
+            if (currentX > max.x) {
+                currentX = min.x
                 currentY++
-                if (currentY > end.y) {
-                    currentY = start.y
+                if (currentY > max.y) {
+                    currentY = min.y
                     currentZ++
-                    if (currentZ > end.z) throw NoSuchElementException()
                 }
             }
             return result

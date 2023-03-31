@@ -37,12 +37,12 @@ abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned
     fun finishTileCreation() {
         if (!canCreateNewPieces) throw IllegalStateException("You can't call finishPieceCreation() twice")
         canCreateNewPieces = false
-        actionsAfterFinishCreation!!.forEach { it() }
-        actionsAfterFinishCreation = null
         _arraySize = arraySizeForMaxIndex(maxId)
         _maxEntropyArray =
             LongArray(arraySize) { i -> if (i < arraySize - 1) -1L else -1L shl (64 - (maxId % 64)) } // -1L is 0b11111111...
         _minEntropyArray = LongArray(arraySize)
+        actionsAfterFinishCreation!!.forEach { it() }
+        actionsAfterFinishCreation = null
     }
 
     protected fun addActionAfterFinishCreation(action: () -> Unit) {
