@@ -34,7 +34,7 @@ abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned
     /**
      * Call this when you're done creating pieces. You can still add neighbors to them.
      */
-    fun finishPieceCreation() {
+    fun finishTileCreation() {
         if (!canCreateNewPieces) throw IllegalStateException("You can't call finishPieceCreation() twice")
         canCreateNewPieces = false
         actionsAfterFinishCreation!!.forEach { it() }

@@ -53,8 +53,11 @@ class TileSet<C : Rotatable<D>, D : Dimension<D>>(override val dimension: D) : A
             }
         }
 
-        override fun accepts(direction: Direction<D>, neighborId: Int): Boolean =
-            acceptedNeighbors[direction]?.getBitAt(neighborId) ?: false
+        override fun accepts(direction: Direction<D>, neighborId: Int): Boolean {
+            if (this@TileSet.canCreateNewPieces)
+                throw IllegalStateException("Can't create new pieces after finishPieceCreation() has been called")
+            return acceptedNeighbors[direction]?.getBitAt(neighborId) ?: false
+        }
 
         override fun accept(direction: Direction<D>, neighborId: Int) {
             if (this@TileSet.canCreateNewPieces) {
