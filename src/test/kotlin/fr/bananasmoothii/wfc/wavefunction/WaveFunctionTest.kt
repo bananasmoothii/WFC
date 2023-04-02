@@ -69,7 +69,7 @@ class WaveFunctionTest {
             fileDir.mkdirs()
 
             val waveFunction = WaveFunction(tileSet, commitStates = false)
-            val bounds: Bounds2D = Coords2D(-100, -100)..Coords2D(100, 100)
+            val bounds: Bounds2D = Coords2D(0, 0)..Coords2D(1280, 720)
             /*
             waveFunction.onCollapse = { _, _ ->
                 ImageIO.write(
