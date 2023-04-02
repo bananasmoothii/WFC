@@ -11,13 +11,13 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-class TileSetTest {
+class NeighborBasedTileSetTest {
 
     data class Arrow2D(val direction: Direction2D) : Rotatable<Dimension2D>, D2 {
         override fun generateRotations(): Iterable<Rotatable<Dimension2D>> = Direction2D.values.map { Arrow2D(it) }
     }
 
-    private val tileSet = TileSet<Arrow2D, Dimension2D>()
+    private val tileSet = NeighborBasedTileSet<Arrow2D, Dimension2D>()
 
     @Test
     @Order(0)

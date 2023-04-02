@@ -25,7 +25,6 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
     protected var lastCoordsWherePicked: Coords<D>? = null
     protected var lastTileIdPicked: Int? = null
 
-    protected val maxId = tileSet.maxId
     protected val maxEntropyArray = tileSet.maxEntropyArray
     protected val arraySize = tileSet.arraySize
 
@@ -38,7 +37,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
             commit()
             // there are multiple possibilities, so we pick one
             lastCoordsWherePicked = coords
-            val tileId = chooseTile(tilesAtCoordsArray)
+            val tileId = tileSet.pickTile(tilesAtCoordsArray, random)
             lastTileIdPicked = tileId
             collapse(coords, tileId)
             try {
@@ -52,12 +51,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
         }
     }
 
-    fun chooseTile(options: LongArray?): Int {
-        if (options == null) return random.nextInt(maxId)
-        return tileSet.pickTile(options, random)
-    }
-
-    fun collapse(coords: Coords<D>, chosenTile: Int = chooseTile(map[coords])) {
+    fun collapse(coords: Coords<D>, chosenTile: Int = tileSet.pickTile(map[coords], random)) {
         val tilesAtCoordsArray = map[coords]
         if (tilesAtCoordsArray != null)
             tilesAtCoordsArray.setAll0AndSet1BitAt(chosenTile)

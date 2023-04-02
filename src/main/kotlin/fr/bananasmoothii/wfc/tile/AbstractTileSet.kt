@@ -2,7 +2,6 @@ package fr.bananasmoothii.wfc.tile
 
 import fr.bananasmoothii.wfc.space.Dimension
 import fr.bananasmoothii.wfc.space.Dimensioned
-import fr.bananasmoothii.wfc.tile.simple.UnfinishedTileSetException
 import fr.bananasmoothii.wfc.util.arraySizeForMaxIndex
 import fr.bananasmoothii.wfc.util.getBitAt
 
@@ -58,7 +57,8 @@ abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned
         return list
     }
 
-    fun pickTile(tilesAtCoordsArray: LongArray, random: kotlin.random.Random): Int {
+    fun pickTile(tilesAtCoordsArray: LongArray?, random: kotlin.random.Random): Int {
+        if (tilesAtCoordsArray == null) return random.nextInt(maxId)
         return getTileList(tilesAtCoordsArray)[random.nextInt(tilesAtCoordsArray.size)].id
     }
 
@@ -69,13 +69,13 @@ abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned
     val maxEntropyArray: LongArray
         get() {
             if (canCreateNewPieces) throw UnfinishedTileSetException()
-            return _maxEntropyArray
+            return _maxEntropyArray.copyOf()
         }
 
     val minEntropyArray: LongArray
         get() {
             if (canCreateNewPieces) throw UnfinishedTileSetException()
-            return _minEntropyArray
+            return _minEntropyArray.copyOf()
         }
 
     val arraySize: Int
