@@ -1,6 +1,7 @@
 package fr.bananasmoothii.wfc.space.d2
 
 import fr.bananasmoothii.wfc.space.Bounds
+import fr.bananasmoothii.wfc.space.Coords
 import fr.bananasmoothii.wfc.space.d2.Bounds2D.Companion.rangeTo
 
 /**
@@ -12,8 +13,8 @@ class Bounds2D private constructor(override val min: Coords2D, override val max:
     val width = max.x - min.x + 1
     val height = max.y - min.y + 1
 
-    operator fun contains(coords: Coords2D): Boolean =
-        coords.x in min.x..max.x && coords.y in min.y..max.y
+    override operator fun contains(coords: Coords<Dimension2D>): Boolean =
+        (coords as Coords2D).x in min.x..max.x && coords.y in min.y..max.y
 
 
     override operator fun iterator(): Iterator<Coords2D> = object : Iterator<Coords2D> {

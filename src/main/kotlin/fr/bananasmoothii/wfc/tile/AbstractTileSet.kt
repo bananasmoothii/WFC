@@ -49,15 +49,15 @@ abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned
         else action()
     }
 
-    fun getTileList(longArray: LongArray): List<Tile<C, D>> {
-        val list = ArrayList<Tile<C, D>>(longArray.size * 64)
+    open fun getTileList(longArray: LongArray): List<Tile<C, D>> {
+        val list = ArrayList<Tile<C, D>>(longArray.size * 16) // this is a very rough estimation
         for (i in 0 .. maxId) {
             if (longArray.getBitAt(i)) list.add(tiles[i])
         }
         return list
     }
 
-    fun pickTile(tilesAtCoordsArray: LongArray?, random: kotlin.random.Random): Int {
+    open fun pickTile(tilesAtCoordsArray: LongArray?, random: kotlin.random.Random): Int {
         if (tilesAtCoordsArray == null) return random.nextInt(maxId)
         val possibilities = getTileList(tilesAtCoordsArray)
         return possibilities[random.nextInt(possibilities.size)].id

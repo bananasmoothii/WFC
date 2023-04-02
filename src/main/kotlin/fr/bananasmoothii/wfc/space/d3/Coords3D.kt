@@ -12,13 +12,13 @@ data class Coords3D(val x: Int, val y: Int, val z: Int) : Coords<Dimension3D>, D
      * [EAST] is positive x, and [UP] is positive y.
      */
     override fun move(direction: Direction<Dimension3D>): Coords3D {
-        return when (direction) {
-            NORTH -> copy(z = z - 1)
-            SOUTH -> copy(z = z + 1)
-            EAST -> copy(x = x + 1)
-            WEST -> copy(x = x - 1)
-            UP -> copy(y = y + 1)
-            DOWN -> copy(y = y - 1)
+        return when (direction.hashCode()) {
+            1 -> copy(z = z - 1) // NORTH
+            2 -> copy(z = z + 1) // SOUTH
+            3 -> copy(x = x + 1) // EAST
+            4 -> copy(x = x - 1) // WEST
+            5 -> copy(y = y + 1) // UP
+            6 -> copy(y = y - 1) // DOWN
             else -> throw IllegalArgumentException("Direction $direction is not a Direction3D")
         }
     }

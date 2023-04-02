@@ -13,7 +13,9 @@ sealed class TileSet<C : Rotatable<D>, D : Dimension<D>, T : Tile<C, D>>(overrid
     protected val _tiles: MutableList<T> = mutableListOf()
 
     override val tiles: List<T>
-        get() = _tiles.toList()
+        get() {
+            return _tiles.toList()
+        }
 
     override fun fromId(id: Int): T = _tiles[id]
 
@@ -24,6 +26,14 @@ sealed class TileSet<C : Rotatable<D>, D : Dimension<D>, T : Tile<C, D>>(overrid
                 createOrGetTile(rotation as C)
             }
         }
+    }
+
+    override fun getTileList(longArray: LongArray): List<Tile<C, D>> {
+        val list = ArrayList<Tile<C, D>>(longArray.size * 16) // this is a very rough estimation
+        for (i in 0 .. maxId) {
+            if (longArray.getBitAt(i)) list.add(tiles[i])
+        }
+        return list
     }
 }
 

@@ -1,6 +1,7 @@
 package fr.bananasmoothii.wfc.space.d3
 
 import fr.bananasmoothii.wfc.space.Bounds
+import fr.bananasmoothii.wfc.space.Coords
 import fr.bananasmoothii.wfc.space.d3.Bounds3D.Companion.rangeTo
 
 /**
@@ -9,8 +10,8 @@ import fr.bananasmoothii.wfc.space.d3.Bounds3D.Companion.rangeTo
  */
 class Bounds3D private constructor(override val min: Coords3D, override val max: Coords3D) : Bounds<Dimension3D>, D3 {
 
-    operator fun contains(coords: Coords3D): Boolean =
-        coords.x in min.x..max.x && coords.y in min.y..max.y && coords.z in min.z..max.z
+    override operator fun contains(coords: Coords<Dimension3D>): Boolean =
+        (coords as Coords3D).x in min.x..max.x && coords.y in min.y..max.y && coords.z in min.z..max.z
 
 
     override operator fun iterator(): Iterator<Coords3D> = object : Iterator<Coords3D> {

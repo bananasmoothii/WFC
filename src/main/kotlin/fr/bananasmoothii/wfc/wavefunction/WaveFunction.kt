@@ -10,9 +10,10 @@ import fr.bananasmoothii.wfc.tile.Tile
 import fr.bananasmoothii.wfc.util.*
 import kotlin.random.Random
 
-open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
+class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
     val tileSet: AbstractTileSet<C, D>,
-    protected val random: Random = Random.Default,
+    private val random: Random = Random.Default,
+    val commitStates: Boolean = true,
     var onCollapse: ((Coords<D>, Tile<C, D>) -> Unit)? = null,
 ) : Iterable<Map.Entry<Coords<D>, List<Tile<C, D>>>>, Versionable {
 
@@ -20,21 +21,22 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
         require(!tileSet.canCreateNewPieces) { "You have to finish creating the TileSet before using it in generation" }
     }
 
-    protected var map = mutableMapOf<Coords<D>, LongArray>()
+    private var map = mutableMapOf<Coords<D>, LongArray>()
 
-    protected var lastCoordsWherePicked: Coords<D>? = null
-    protected var lastTileIdPicked: Int? = null
+    private var lastCoordsWherePicked: Coords<D>? = null
+    private var lastTileIdPicked: Int? = null
 
-    protected val maxEntropyArray = tileSet.maxEntropyArray
-    protected val arraySize = tileSet.arraySize
+    private val maxEntropyArray = tileSet.maxEntropyArray
+    private val arraySize = tileSet.arraySize
 
     //private val dispatcher = newSingleThreadContext("Propagation thread")
 
     fun collapse(bounds: Bounds<D>) {
+        if (!commitStates) commit() // commit only once
         for (coords in bounds) {
             val tilesAtCoordsArray = map[coords]
             if (tilesAtCoordsArray?.hasSingle1Bit() == true) continue
-            commit()
+            if (commitStates) commit()
             // there are multiple possibilities, so we pick one
             lastCoordsWherePicked = coords
             val tileId = tileSet.pickTile(tilesAtCoordsArray, random)
@@ -93,7 +95,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
         }
     }
 
-    protected data class PropagationTask<D : Dimension<D>>(
+    private data class PropagationTask<D : Dimension<D>>(
         val center: Coords<D>,
         val direction: Direction<D>
     ) {
@@ -118,16 +120,18 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
     }
 
 
-    protected open inner class State(
+    private open inner class State(
         val map: MutableMap<Coords<D>, LongArray>,
         val lastCoordsWherePicked: Coords<D>?,
         val lastTileIdPicked: Int?
     )
 
-    protected val states = mutableListOf<State>()
+    private val states = mutableListOf<State>()
 
     override fun commit() {
-        states += State(map.toMutableMap(), lastCoordsWherePicked, lastTileIdPicked)
+        val mapCopy = HashMap<Coords<D>, LongArray>(map.size)
+        mapCopy.putAll(map)
+        states += State(mapCopy, lastCoordsWherePicked, lastTileIdPicked)
     }
 
     override fun canRollback(): Boolean = states.isNotEmpty()
