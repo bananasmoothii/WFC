@@ -70,6 +70,7 @@ class WaveFunctionTest {
 
             val waveFunction = WaveFunction(tileSet)
             val bounds: Bounds2D = Coords2D(0, 0)..Coords2D(25, 25)
+            /*
             waveFunction.onCollapse = { _, _ ->
                 ImageIO.write(
                     waveFunction.toImage(bounds, 10, 10),
@@ -77,6 +78,8 @@ class WaveFunctionTest {
                     File(fileDir, "out-${System.nanoTime()}.png").also { it.createNewFile() }
                 )
             }
+
+             */
 
             waveFunction.collapse(bounds)
             val image = waveFunction.toImage(bounds, 10, 10)
