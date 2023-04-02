@@ -12,6 +12,7 @@ import fr.bananasmoothii.wfc.util.image.RotatableImage
 import fr.bananasmoothii.wfc.util.image.toImage
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 
@@ -58,26 +59,34 @@ class WaveFunctionTest {
             tileSet.finishTileCreation()
         }
 
-        private fun wfc() {
+        private fun BufferedImage.save(name: String) {
+            ImageIO.write(this, "png", File("./images/$name.png").also { it.createNewFile() })
+        }
+
+        private fun wfc(dir: String = "images") {
+            val fileDir = File("./$dir")
+            fileDir.delete()
+            fileDir.mkdirs()
+
             val waveFunction = WaveFunction(tileSet)
-            val bounds: Bounds2D = Coords2D(0, 0)..Coords2D(5, 5)
+            val bounds: Bounds2D = Coords2D(0, 0)..Coords2D(25, 25)
             waveFunction.onCollapse = { _, _ ->
                 ImageIO.write(
                     waveFunction.toImage(bounds, 10, 10),
                     "png",
-                    File("./images/out-${System.nanoTime()}.png").also { it.createNewFile() }
+                    File(fileDir, "out-${System.nanoTime()}.png").also { it.createNewFile() }
                 )
             }
 
             waveFunction.collapse(bounds)
             val image = waveFunction.toImage(bounds, 10, 10)
-            ImageIO.write(image, "png", File("./images/out.png").also { it.createNewFile() })
+            ImageIO.write(image, "png", File(fileDir, "out-final.png").also { it.createNewFile() })
         }
 
         @Test
         @Order(2)
         fun `WFC with neighbor based tileset`() {
-            wfc()
+            wfc("images/neighbor")
         }
 
         @Test

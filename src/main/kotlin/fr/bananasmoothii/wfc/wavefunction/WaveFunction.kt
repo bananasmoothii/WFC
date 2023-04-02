@@ -42,6 +42,8 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
             collapse(coords, tileId)
             try {
                 propagateFrom(coords, bounds)
+                // collapse and propagation successful
+                onCollapse?.invoke(coords, tileSet.fromId(tileId))
             } catch (e: PropagationException) {
                 rollback()
                 // remove that bad choice
@@ -57,14 +59,13 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
             tilesAtCoordsArray.setAll0AndSet1BitAt(chosenTile)
         else
             map[coords] = LongArray(arraySize).also { it.set1BitAt(chosenTile) }
-        onCollapse?.invoke(coords, tileSet.fromId(chosenTile))
     }
 
     /**
      * @throws PropagationException if an empty state is found
      */
     fun propagateFrom(latestCollapse: Coords<D>, bounds: Bounds<D>) {
-        val needPropagationCoords: MutableList<PropagationTask<C, D>> = mutableListOf()
+        val needPropagationCoords: MutableList<PropagationTask<D>> = mutableListOf()
         addPropagationTasksInBoundsToList(latestCollapse, needPropagationCoords, bounds)
 
         while (needPropagationCoords.isNotEmpty()) {
@@ -75,20 +76,16 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
                 // TODO: fork (multithreading) (is it good to do it here ?)
 
                 val taskPointsTo = center.move(direction)
-                val tilesAtCoordsArray = map[taskPointsTo] ?: maxEntropyArray.copyOf()
+                val tilesAtNewCoordsArray = map[taskPointsTo] ?: maxEntropyArray.copyOf()
                 val currentLocationMaskForDirection = LongArray(arraySize)
-                tileSet.getTileList(map[center] ?: maxEntropyArray).forEach {
-                    it.addAllowedNeighborsToArray(currentLocationMaskForDirection, direction)
+                for (tileAtCenter in tileSet.getTileList(map[center] ?: maxEntropyArray)) {
+                    tileAtCenter.addAllowedNeighborsToArray(currentLocationMaskForDirection, direction)
                 }
 
-                if (tilesAtCoordsArray bitAndEquals currentLocationMaskForDirection) { // removing impossible neighbors
+                if (tilesAtNewCoordsArray bitAndEquals currentLocationMaskForDirection) { // removing impossible neighbors
                     // tilesAtCoordsArray has changed
-                    if (tilesAtCoordsArray.hasOnly0Bits()) throw PropagationException(taskPointsTo)
-
-                    if (onCollapse != null && tilesAtCoordsArray.hasSingle1Bit()) {
-                        val tile = tileSet.getTileList(tilesAtCoordsArray).first()
-                        onCollapse?.let { it(taskPointsTo, tile) }
-                    }
+                    if (tilesAtNewCoordsArray.hasOnly0Bits()) throw PropagationException(taskPointsTo)
+                    map[taskPointsTo] = tilesAtNewCoordsArray
 
                     addPropagationTasksInBoundsToList(taskPointsTo, needPropagationCoords, bounds)
                 }
@@ -96,7 +93,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
         }
     }
 
-    protected data class PropagationTask<C : Rotatable<D>, D : Dimension<D>>(
+    protected data class PropagationTask<D : Dimension<D>>(
         val center: Coords<D>,
         val direction: Direction<D>
     ) {
@@ -105,7 +102,7 @@ open class WaveFunction<C : Rotatable<D>, D : Dimension<D>>(
 
     private fun addPropagationTasksInBoundsToList(
         coords: Coords<D>,
-        list: MutableList<PropagationTask<C, D>>,
+        list: MutableList<PropagationTask<D>>,
         bounds: Bounds<D>
     ) {
         for (direction in coords.dimension.directionsAt(coords)) {

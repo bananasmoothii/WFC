@@ -10,21 +10,17 @@ class RotatableImage(val image: BufferedImage): Rotatable<Dimension2D>, D2 {
 
     fun rotateClockwise(): RotatableImage {
         val newImage = BufferedImage(image.height, image.width, image.type)
-        for (x in 0 until image.width) {
-            for (y in 0 until image.height) {
-                newImage.setRGB(y, image.width - x - 1, image.getRGB(x, y))
-            }
-        }
+        val graphics = newImage.createGraphics()
+        graphics.rotate(Math.PI / 2, newImage.width / 2.0, newImage.height / 2.0)
+        graphics.drawRenderedImage(image, null)
         return RotatableImage(newImage)
     }
 
     fun rotateCounterClockwise(): RotatableImage {
         val newImage = BufferedImage(image.height, image.width, image.type)
-        for (x in 0 until image.width) {
-            for (y in 0 until image.height) {
-                newImage.setRGB(image.height - y - 1, x, image.getRGB(x, y))
-            }
-        }
+        val graphics = newImage.createGraphics()
+        graphics.rotate(-Math.PI / 2, newImage.width / 2.0, newImage.height / 2.0)
+        graphics.drawRenderedImage(image, null)
         return RotatableImage(newImage)
     }
 

@@ -80,3 +80,5 @@ infix fun LongArray.bitAndEquals(other: LongArray): Boolean {
     return changed
 }
 
+fun LongArray.toHexString() = joinToString("") { it.toString(16).padStart(16, '0') }
+

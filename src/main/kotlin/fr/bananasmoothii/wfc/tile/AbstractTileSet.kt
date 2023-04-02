@@ -38,7 +38,7 @@ abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned
         canCreateNewPieces = false
         _arraySize = arraySizeForMaxIndex(maxId)
         _maxEntropyArray =
-            LongArray(arraySize) { i -> if (i < arraySize - 1) -1L else -1L shl (64 - (maxId % 64)) } // -1L is 0b11111111...
+            LongArray(arraySize) { i -> if (i < arraySize - 1) -1L else -1L shl (63 - (maxId % 64)) } // -1L is 0b11111111...
         _minEntropyArray = LongArray(arraySize)
         actionsAfterFinishCreation!!.forEach { it() }
         actionsAfterFinishCreation = null
@@ -51,7 +51,7 @@ abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned
 
     fun getTileList(longArray: LongArray): List<Tile<C, D>> {
         val list = ArrayList<Tile<C, D>>(longArray.size * 64)
-        for (i in 0 until maxId) {
+        for (i in 0 .. maxId) {
             if (longArray.getBitAt(i)) list.add(tiles[i])
         }
         return list
@@ -59,7 +59,8 @@ abstract class AbstractTileSet<C : Rotatable<D>, D : Dimension<D>> : Dimensioned
 
     fun pickTile(tilesAtCoordsArray: LongArray?, random: kotlin.random.Random): Int {
         if (tilesAtCoordsArray == null) return random.nextInt(maxId)
-        return getTileList(tilesAtCoordsArray)[random.nextInt(tilesAtCoordsArray.size)].id
+        val possibilities = getTileList(tilesAtCoordsArray)
+        return possibilities[random.nextInt(possibilities.size)].id
     }
 
     private lateinit var _maxEntropyArray: LongArray

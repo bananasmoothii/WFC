@@ -5,6 +5,7 @@ import fr.bananasmoothii.wfc.space.d2.Dimension2D
 import fr.bananasmoothii.wfc.space.d2.Direction2D
 import fr.bananasmoothii.wfc.tile.Rotatable
 import fr.bananasmoothii.wfc.util.set1BitAt
+import fr.bananasmoothii.wfc.util.toHexString
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.*
@@ -50,11 +51,32 @@ class NeighborBasedTileSetTest {
         tileSet.finishTileCreation()
     }
 
+    @Test
+    @Order(5)
+    fun getTileList() {
+        tileSet.getTileList(LongArray(1) { 0x5000000000000000 }).map { it.id } shouldContainAll listOf(1, 3)
+    }
+
+    @Test
+    @Order(6)
+    fun getMaxEntropyArray() {
+        val maxEntropyArray = tileSet.maxEntropyArray
+        maxEntropyArray.size shouldBe 1
+        maxEntropyArray.toHexString() shouldBe LongArray(1).apply {
+            set1BitAt(0)
+            set1BitAt(1)
+            set1BitAt(2)
+            set1BitAt(3)
+        }.toHexString()
+    }
+
     @Nested
+    @Order(6)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
     inner class Tiles {
 
         @Test
-        @Order(5)
+        @Order(1)
         fun `neighbor modification`() {
             val tile = tileSet.fromId(0)
             tile.accepts(Direction2D.UP, 0) shouldBe false
@@ -65,7 +87,7 @@ class NeighborBasedTileSetTest {
         }
 
         @Test
-        @Order(6)
+        @Order(2)
         fun addAllowedNeighborsToArray() {
             val tile = tileSet.fromId(1)
             tile.accept(Direction2D.UP, 0)
