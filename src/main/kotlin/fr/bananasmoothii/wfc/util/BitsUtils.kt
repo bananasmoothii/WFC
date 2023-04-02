@@ -4,10 +4,11 @@ const val ZERO_LEFT = 1L shl 63
 
 /**
  * @param index the index of the bit, will be mod 64 thanks to [Long.ushr]
+ * @return 0L 000...000010000... where there are [index] 0s before the 1
  */
 fun bitAt(index: Int) = ZERO_LEFT ushr index
 
-fun arraySizeForMaxIndex(maxIndex: Int) = (maxIndex + 63) / 64
+fun arraySizeForMaxIndex(maxIndex: Int) = maxIndex / 64 + 1
 
 fun LongArray.set1BitAt(index: Int) {
     this[index / 64] = this[index / 64] or bitAt(index)
